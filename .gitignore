@@ -1,0 +1,7 @@
+node_modules
+.next
+.env*
+# Base de datos local antigua (la app ahora usa Supabase)
+data/
+*.tsbuildinfo
+next-env.d.ts
