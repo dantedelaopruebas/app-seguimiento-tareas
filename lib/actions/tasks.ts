@@ -154,6 +154,30 @@ export async function listAllCompleted(days = 30) {
     .orderBy(desc(tasks.completedAt));
 }
 
+export interface CompletedFilter {
+  from?: Date | null;
+  to?: Date | null;
+  projectId?: string | null;
+  query?: string;
+}
+
+export async function listCompletedFiltered(filter: CompletedFilter) {
+  const conditions: any[] = [eq(tasks.status, "done")];
+  if (filter.from) conditions.push(gte(tasks.completedAt, filter.from));
+  if (filter.to) conditions.push(lte(tasks.completedAt, filter.to));
+  if (filter.projectId === null) conditions.push(isNull(tasks.projectId));
+  else if (filter.projectId) conditions.push(eq(tasks.projectId, filter.projectId));
+  if (filter.query && filter.query.trim()) {
+    const q = `%${filter.query.trim().toLowerCase()}%`;
+    conditions.push(sql`lower(${tasks.title}) LIKE ${q}`);
+  }
+  return db
+    .select()
+    .from(tasks)
+    .where(and(...conditions))
+    .orderBy(desc(tasks.completedAt));
+}
+
 export async function listTasks(filter: TaskFilter = {}) {
   const now = new Date();
   const todayEnd = endOfDay(now);
@@ -174,6 +198,8 @@ export async function listTasks(filter: TaskFilter = {}) {
     conditions.push(sql`${tasks.status} != 'done'`);
   } else if (filter.scope === "done") {
     conditions.push(eq(tasks.status, "done"));
+  } else if (filter.scope === "all") {
+    conditions.push(sql`${tasks.status} != 'done'`);
   } else if (filter.projectId) {
     conditions.push(eq(tasks.projectId, filter.projectId));
   }
@@ -183,6 +209,17 @@ export async function listTasks(filter: TaskFilter = {}) {
     .from(tasks)
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(asc(tasks.status), asc(tasks.dueDate), desc(tasks.createdAt));
+}
+
+export async function searchTasks(query: string, limit = 10) {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  return db
+    .select()
+    .from(tasks)
+    .where(sql`lower(${tasks.title}) LIKE ${`%${q}%`}`)
+    .orderBy(desc(tasks.updatedAt))
+    .limit(limit);
 }
 
 export async function listAllTasksWithRelations() {

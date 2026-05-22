@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Plus, HelpCircle } from "lucide-react";
 import { useState, useTransition, useRef, useEffect } from "react";
 import { createTaskFromInput } from "@/lib/actions/tasks";
 import { parseQuickAdd } from "@/lib/parser/quick-add";
@@ -44,9 +44,18 @@ export function QuickAdd({ defaultProjectId }: { defaultProjectId?: string | nul
           value={value}
           onChange={(e) => setValue(e.target.value)}
           disabled={pending}
-          placeholder="Añadir tarea... usa !alta  #tag  @proyecto  mañana  6pm"
+          placeholder="¿Qué necesitas hacer?"
           className="flex-1 bg-transparent outline-none text-[14px] placeholder:text-fg-subtle"
         />
+        <button
+          type="button"
+          tabIndex={-1}
+          title="Atajos: escribe 'mañana', '6pm', '!alta', '#etiqueta', '@proyecto' para asignar al vuelo"
+          className="text-fg-subtle hover:text-fg-muted transition-colors"
+          onClick={(e) => e.preventDefault()}
+        >
+          <HelpCircle className="w-3.5 h-3.5" />
+        </button>
         <span className="kbd hidden group-focus-within:inline">↵</span>
       </div>
       {preview && (preview.priority !== "none" || preview.dueDate || preview.tags.length || preview.projectName) && (

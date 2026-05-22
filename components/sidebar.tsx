@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Inbox, Calendar, LayoutGrid, BarChart3, CalendarDays,
-  Plus, Folder, ChevronRight, AlertCircle, Sparkles, CheckCircle2
+  Calendar, LayoutGrid, CalendarDays,
+  Plus, Sparkles, ListChecks, History, Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useTransition } from "react";
@@ -44,17 +44,15 @@ export function Sidebar({ projects }: { projects: ProjectLite[] }) {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
-        <SidebarItem href="/inbox" icon={Inbox} label="Inbox" active={pathname === "/inbox" || pathname === "/"} />
-        <SidebarItem href="/today" icon={Calendar} label="Hoy" active={pathname === "/today"} />
-        <SidebarItem href="/upcoming" icon={CalendarDays} label="Próximos 7 días" active={pathname === "/upcoming"} />
-        <SidebarItem href="/overdue" icon={AlertCircle} label="Vencidas" active={pathname === "/overdue"} />
-        <SidebarItem href="/completed" icon={CheckCircle2} label="Completadas" active={pathname === "/completed"} />
+        <SidebarItem href="/today" icon={Sun} label="Hoy" active={pathname === "/today" || pathname === "/"} />
+        <SidebarItem href="/upcoming" icon={CalendarDays} label="Próximas" active={pathname === "/upcoming"} />
+        <SidebarItem href="/all" icon={ListChecks} label="Todas" active={pathname === "/all"} />
 
         <div className="h-px bg-border-subtle my-3 mx-1" />
 
+        <SidebarItem href="/calendar" icon={Calendar} label="Calendario" active={pathname === "/calendar"} />
         <SidebarItem href="/board" icon={LayoutGrid} label="Tablero" active={pathname === "/board"} />
-        <SidebarItem href="/calendar" icon={CalendarDays} label="Calendario" active={pathname === "/calendar"} />
-        <SidebarItem href="/dashboard" icon={BarChart3} label="Dashboard" active={pathname === "/dashboard"} />
+        <SidebarItem href="/history" icon={History} label="Historial" active={pathname === "/history"} />
 
         <div className="flex items-center justify-between px-2 mt-5 mb-1.5">
           <span className="text-[11px] uppercase tracking-wider text-fg-subtle">Proyectos</span>

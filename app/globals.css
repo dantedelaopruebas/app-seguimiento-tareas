@@ -26,6 +26,13 @@ input, textarea, button { font: inherit; }
   width: 8px; height: 8px; border-radius: 999px; display: inline-block;
 }
 
+@keyframes check-pop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  60%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-check-pop { animation: check-pop 220ms cubic-bezier(.34,1.56,.64,1); }
+
 .kbd {
   font-family: var(--font-mono), ui-monospace;
   font-size: 10px;
