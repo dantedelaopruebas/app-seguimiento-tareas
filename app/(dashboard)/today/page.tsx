@@ -16,7 +16,7 @@ export default async function TodayPage() {
       <Topbar title="Hoy" subtitle={`${format(new Date(), "EEEE, d 'de' MMMM", { locale: es })}${completedToday.length ? ` · ${completedToday.length} hechas` : ""}`} />
       <div className="flex-1 overflow-auto">
         <div className="max-w-3xl mx-auto px-6 py-6 space-y-4">
-          <QuickAdd />
+          <QuickAdd defaultDueDate="today" />
           <TaskList tasks={tasks} emptyMessage="No hay nada pendiente para hoy. 🌿" />
           <CompletedSection tasks={completedToday} />
         </div>

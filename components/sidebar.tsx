@@ -45,7 +45,6 @@ export function Sidebar({ projects }: { projects: ProjectLite[] }) {
 
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
         <SidebarItem href="/today" icon={Sun} label="Hoy" active={pathname === "/today" || pathname === "/"} />
-        <SidebarItem href="/upcoming" icon={CalendarDays} label="Próximas" active={pathname === "/upcoming"} />
         <SidebarItem href="/all" icon={ListChecks} label="Todas" active={pathname === "/all"} />
 
         <div className="h-px bg-border-subtle my-3 mx-1" />

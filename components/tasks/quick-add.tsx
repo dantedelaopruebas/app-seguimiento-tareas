@@ -7,7 +7,15 @@ import { parseQuickAdd } from "@/lib/parser/quick-add";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-export function QuickAdd({ defaultProjectId }: { defaultProjectId?: string | null }) {
+export function QuickAdd({
+  defaultProjectId,
+  defaultDueDate,
+}: {
+  defaultProjectId?: string | null;
+  /** Si el usuario crea desde una vista contextual (Hoy, etc.), heredamos su fecha
+   * salvo que él escriba una explícitamente. */
+  defaultDueDate?: "today" | "tomorrow" | null;
+}) {
   const [value, setValue] = useState("");
   const [pending, start] = useTransition();
   const ref = useRef<HTMLInputElement>(null);
@@ -27,7 +35,12 @@ export function QuickAdd({ defaultProjectId }: { defaultProjectId?: string | nul
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!value.trim()) return;
-    const v = value;
+    let v = value;
+    // Si la vista define una fecha por defecto y el texto NO menciona una fecha,
+    // la añadimos de forma transparente para el usuario.
+    if (defaultDueDate && !/\b(hoy|ma(ñ|n)ana|pasado|lunes|martes|mi(é|e)rcoles|jueves|viernes|s(á|a)bado|domingo|\d{1,2}[\/\-]\d{1,2})\b/i.test(v)) {
+      v = `${v} ${defaultDueDate === "today" ? "hoy" : "mañana"}`;
+    }
     setValue("");
     start(async () => { await createTaskFromInput(v, defaultProjectId); });
   }

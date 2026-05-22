@@ -5,10 +5,15 @@ import { projects, tasks } from "@/lib/db/schema";
 import { uid } from "@/lib/utils";
 import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { cache } from "react";
 
 const PALETTE = ["#6366f1", "#ec4899", "#10b981", "#f59e0b", "#3b82f6", "#ef4444", "#8b5cf6", "#14b8a6"];
 
-export async function listProjects() {
+/**
+ * Cacheado por petición con React `cache()`: si varios server components piden
+ * los proyectos durante el mismo render, solo se hace una consulta a la base.
+ */
+export const listProjects = cache(async () => {
   return db
     .select({
       id: projects.id,
@@ -19,7 +24,7 @@ export async function listProjects() {
     })
     .from(projects)
     .orderBy(projects.position, projects.createdAt);
-}
+});
 
 export async function createProject(name: string) {
   if (!name.trim()) return;

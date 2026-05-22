@@ -100,7 +100,6 @@ export function CommandPalette({ projects }: { projects: { id: string; name: str
             {!value.trim() && (
               <Command.Group heading="Navegar" className="text-[10px] uppercase tracking-wider text-fg-subtle px-2 pt-2 pb-1">
                 <Item icon={Sun} label="Hoy" onSelect={() => go("/today")} />
-                <Item icon={CalendarDays} label="Próximas" onSelect={() => go("/upcoming")} />
                 <Item icon={ListChecks} label="Todas" onSelect={() => go("/all")} />
                 <Item icon={Calendar} label="Calendario" onSelect={() => go("/calendar")} />
                 <Item icon={LayoutGrid} label="Tablero" onSelect={() => go("/board")} />
