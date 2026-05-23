@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+
+type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 /**
  * Refresca la sesión y protege todas las rutas excepto /login.
@@ -16,7 +18,7 @@ export async function middleware(req: NextRequest) {
         getAll() {
           return req.cookies.getAll();
         },
-        setAll(toSet) {
+        setAll(toSet: CookieToSet[]) {
           for (const c of toSet) req.cookies.set(c.name, c.value);
           res = NextResponse.next({ request: req });
           for (const c of toSet) res.cookies.set(c.name, c.value, c.options);

@@ -98,7 +98,8 @@ export function parseQuickAdd(input: string): ParsedTask {
   }
 
   if (dueDate && timePart) {
-    dueDate = set(dueDate, { hours: timePart.h, minutes: timePart.m, seconds: 0, milliseconds: 0 });
+    const t = timePart as { h: number; m: number };
+    dueDate = set(dueDate, { hours: t.h, minutes: t.m, seconds: 0, milliseconds: 0 });
   }
 
   return {
