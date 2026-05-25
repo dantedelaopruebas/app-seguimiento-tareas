@@ -9,6 +9,27 @@ pueda tenerla corriendo en su computadora en unos 10 minutos.
 
 ---
 
+## Dos formas de instalar
+
+### Camino A — Con Claude Code (recomendado, sin teclear nada técnico)
+
+Si tienes Claude Code instalado, **abre Claude Code dentro de la carpeta del
+proyecto** y di:
+
+> "configura mi proyecto"
+
+Claude te pedirá tus tokens uno por uno (Supabase y, si quieres, Vercel) y se
+encarga de TODO: crear la base de datos, tu usuario, el archivo de
+credenciales, e incluso publicar la app en internet. Solo le pegas los tokens
+en el chat cuando te los pida.
+
+### Camino B — Manual (sin Claude Code)
+
+Sigue los pasos numerados de abajo. Cada paso es un comando o una visita a
+una web. Te lleva ~10 minutos.
+
+---
+
 ## Antes de empezar
 
 Necesitas tener instalado **Node.js versión 18 o superior**.
@@ -118,21 +139,29 @@ login. Entra con el email y contraseña que pusiste en el paso anterior.
 
 ## (Opcional) Paso 7 · Publica tu app en internet con Vercel
 
-Si quieres acceder a tu app desde cualquier lado, puedes desplegarla **gratis**
-en Vercel:
+Si quieres acceder a tu app desde cualquier dispositivo, puedes desplegarla
+**gratis** en Vercel con otro script automático.
 
-1. Crea cuenta en **https://vercel.com**.
-2. Instala el CLI: `npm install -g vercel`.
-3. Desde la carpeta del proyecto:
+1. Crea cuenta en **https://vercel.com** (puedes registrarte con tu correo o
+   con GitHub).
+2. Genera un **Personal Access Token** en
+   **https://vercel.com/account/tokens** → Create Token. Cópialo.
+3. Desde la carpeta del proyecto corre:
    ```bash
-   vercel
+   npm run deploy
    ```
-4. Cuando pregunte, **link a un proyecto nuevo**. Luego copia tu `.env`
-   completo y pega cada variable en el dashboard de Vercel (Settings →
-   Environment Variables). Después corre:
-   ```bash
-   vercel --prod
-   ```
+4. El script te pide:
+   - Tu token de Vercel (pégalo).
+   - El nombre del proyecto (por defecto `app-seguimiento-tareas`).
+
+   Y solo se encarga del resto:
+   - Crea el proyecto en Vercel.
+   - Sube tus variables de entorno automáticamente desde tu `.env`.
+   - Despliega la app.
+   - Desactiva la protección de despliegue (para que la URL sea pública).
+   - Te muestra la **URL pública** al final.
+
+5. Abre la URL en cualquier dispositivo y entra con tus credenciales.
 
 ---
 
@@ -195,7 +224,8 @@ fecha, prioridad, proyecto, notas o eliminarla.
 
 | Comando | Qué hace |
 |---|---|
-| `npm run setup` | Configura todo desde cero (lo corres una vez). |
+| `npm run setup` | Configura Supabase desde cero (lo corres una vez al inicio). |
+| `npm run deploy` | Publica/actualiza tu app en internet (Vercel). |
 | `npm run dev` | Arranca la app en modo desarrollo (uso normal). |
 | `npm run build` | Prepara la versión optimizada para producción. |
 | `npm run start` | Arranca la versión de producción. |
