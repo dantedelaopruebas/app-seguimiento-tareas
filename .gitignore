@@ -1,6 +1,8 @@
 node_modules
 .next
 .env*
+# Pero sí queremos publicar la plantilla:
+!.env.example
 # Base de datos local antigua (la app ahora usa Supabase)
 data/
 *.tsbuildinfo
