@@ -39,7 +39,7 @@ async function ensureTags(names: string[]) {
 
 export async function createTaskFromInput(input: string, defaultProjectId?: string | null) {
   const parsed = parseQuickAdd(input);
-  if (!parsed.title) return { ok: false, error: "Título vacío" };
+  if (!parsed.title) return { ok: false as const, error: "Título vacío" };
 
   let projectId: string | null = defaultProjectId ?? null;
   if (parsed.projectName) {
@@ -48,13 +48,16 @@ export async function createTaskFromInput(input: string, defaultProjectId?: stri
   }
 
   const id = uid("tsk");
-  await db.insert(tasks).values({
-    id,
-    title: parsed.title,
-    priority: parsed.priority,
-    dueDate: parsed.dueDate ?? null,
-    projectId,
-  });
+  const [inserted] = await db
+    .insert(tasks)
+    .values({
+      id,
+      title: parsed.title,
+      priority: parsed.priority,
+      dueDate: parsed.dueDate ?? null,
+      projectId,
+    })
+    .returning();
 
   if (parsed.tags.length) {
     const tagIds = await ensureTags(parsed.tags);
@@ -65,7 +68,7 @@ export async function createTaskFromInput(input: string, defaultProjectId?: stri
 
   await db.insert(activityLog).values({ id: uid("act"), taskId: id, action: "created" });
   revalidatePath("/", "layout");
-  return { ok: true, id };
+  return { ok: true as const, id, task: inserted };
 }
 
 export async function toggleTask(id: string) {
@@ -220,6 +223,23 @@ export async function searchTasks(query: string, limit = 10) {
     .where(sql`lower(${tasks.title}) LIKE ${`%${q}%`}`)
     .orderBy(desc(tasks.updatedAt))
     .limit(limit);
+}
+
+/**
+ * Carga única para el shell de la app: todas las tareas pendientes + las
+ * completadas en los últimos 30 días (suficiente para Hoy/Todas/Tablero/
+ * Calendario y la mayoría del Historial). Las consultas adicionales solo
+ * se hacen al ver Historial con filtros más antiguos.
+ */
+export async function listDashboardTasks() {
+  const since = new Date(Date.now() - 30 * 86400000);
+  return db
+    .select()
+    .from(tasks)
+    .where(
+      sql`${tasks.status} != 'done' OR ${tasks.completedAt} >= ${since}`
+    )
+    .orderBy(desc(tasks.createdAt));
 }
 
 export async function listAllTasksWithRelations() {

@@ -9,6 +9,7 @@ import { toggleTask } from "@/lib/actions/tasks";
 import type { Task } from "@/lib/db/schema";
 import { useToast } from "@/components/toast";
 import { useTaskEditor } from "./task-editor-store";
+import { useData } from "@/components/data/store";
 
 const PRIORITY_COLORS: Record<string, string> = {
   urgent: "bg-priority-urgent",
@@ -24,6 +25,7 @@ export function TaskRow({ task }: { task: Task }) {
   const done = optimisticDone ?? task.status === "done";
   const showToast = useToast((s) => s.show);
   const openEditor = useTaskEditor((s) => s.open);
+  const setTaskStatus = useData((s) => s.setTaskStatus);
 
   const due = task.dueDate ? new Date(task.dueDate) : null;
   const overdue = due && isPast(due) && !isToday(due) && !done;
@@ -43,6 +45,13 @@ export function TaskRow({ task }: { task: Task }) {
           e.stopPropagation();
           const willBeDone = !done;
           setOptimisticDone(willBeDone);
+          // Optimismo global: actualiza el store del navegador al instante,
+          // así otras vistas (Tablero, Historial, contadores) reaccionan ya.
+          setTaskStatus(
+            task.id,
+            willBeDone ? "done" : "todo",
+            willBeDone ? new Date() : null
+          );
           if (willBeDone) showToast(`Completada: ${task.title}`);
           start(async () => {
             await toggleTask(task.id);

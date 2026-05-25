@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useTaskEditor } from "./task-editor-store";
 import { updateTask, deleteTask } from "@/lib/actions/tasks";
 import { useToast } from "@/components/toast";
+import { useData } from "@/components/data/store";
 
 type ProjectLite = { id: string; name: string; color: string };
 
@@ -29,6 +30,8 @@ export function TaskEditor({ projects }: { projects: ProjectLite[] }) {
   const [description, setDescription] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const showToast = useToast((s) => s.show);
+  const upsertTask = useData((s) => s.upsertTask);
+  const removeTask = useData((s) => s.removeTask);
 
   useEffect(() => {
     if (task) {
@@ -51,6 +54,7 @@ export function TaskEditor({ projects }: { projects: ProjectLite[] }) {
     const v = title.trim();
     if (!v || v === task.title) return;
     patch({ title: v });
+    upsertTask({ ...task, title: v });
     start(async () => { await updateTask(task.id, { title: v }); });
   }
 
@@ -59,24 +63,28 @@ export function TaskEditor({ projects }: { projects: ProjectLite[] }) {
     const v = description.trim() || null;
     if (v === (task.description ?? null)) return;
     patch({ description: v });
+    upsertTask({ ...task, description: v });
     start(async () => { await updateTask(task.id, { description: v }); });
   }
 
   function setDate(d: Date | null) {
     if (!task) return;
     patch({ dueDate: d });
+    upsertTask({ ...task, dueDate: d });
     start(async () => { await updateTask(task.id, { dueDate: d }); });
   }
 
   function setPriority(p: typeof PRIORITIES[number]["value"]) {
     if (!task) return;
     patch({ priority: p });
+    upsertTask({ ...task, priority: p });
     start(async () => { await updateTask(task.id, { priority: p }); });
   }
 
   function setProject(id: string | null) {
     if (!task) return;
     patch({ projectId: id });
+    upsertTask({ ...task, projectId: id });
     start(async () => { await updateTask(task.id, { projectId: id }); });
   }
 
@@ -85,6 +93,7 @@ export function TaskEditor({ projects }: { projects: ProjectLite[] }) {
     const id = task.id;
     const titleSnapshot = task.title;
     close();
+    removeTask(id);
     start(async () => {
       await deleteTask(id);
       showToast(`Eliminada: ${titleSnapshot}`);

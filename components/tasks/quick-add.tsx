@@ -4,6 +4,7 @@ import { Plus, HelpCircle } from "lucide-react";
 import { useState, useTransition, useRef, useEffect } from "react";
 import { createTaskFromInput } from "@/lib/actions/tasks";
 import { parseQuickAdd } from "@/lib/parser/quick-add";
+import { useData } from "@/components/data/store";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -19,6 +20,7 @@ export function QuickAdd({
   const [value, setValue] = useState("");
   const [pending, start] = useTransition();
   const ref = useRef<HTMLInputElement>(null);
+  const upsertTask = useData((s) => s.upsertTask);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -42,7 +44,10 @@ export function QuickAdd({
       v = `${v} ${defaultDueDate === "today" ? "hoy" : "mañana"}`;
     }
     setValue("");
-    start(async () => { await createTaskFromInput(v, defaultProjectId); });
+    start(async () => {
+      const r = await createTaskFromInput(v, defaultProjectId);
+      if (r.ok && r.task) upsertTask(r.task);
+    });
   }
 
   return (

@@ -1,56 +1,41 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-
-type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 /**
- * Refresca la sesión y protege todas las rutas excepto /login.
- * Si no hay sesión, redirige a /login. Si hay sesión y estás en /login, va a /today.
+ * Middleware ultra-rápido: comprueba presencia de la cookie de sesión de
+ * Supabase SIN hacer viaje a la red. El JWT está firmado por Supabase y se
+ * valida cuando una acción/server component realmente lo necesita.
+ *
+ * Esto cambia ~200ms por navegación a <5ms.
  */
-export async function middleware(req: NextRequest) {
-  let res = NextResponse.next({ request: req });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return req.cookies.getAll();
-        },
-        setAll(toSet: CookieToSet[]) {
-          for (const c of toSet) req.cookies.set(c.name, c.value);
-          res = NextResponse.next({ request: req });
-          for (const c of toSet) res.cookies.set(c.name, c.value, c.options);
-        },
-      },
-    }
-  );
-
-  const { data: { user } } = await supabase.auth.getUser();
+export function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
   const isLoginPath = path.startsWith("/login");
 
-  if (!user && !isLoginPath) {
+  // Supabase guarda la sesión en cookies con prefijo "sb-" y sufijo "-auth-token".
+  const hasAuthCookie = req.cookies.getAll().some((c) => {
+    const n = c.name;
+    return n.startsWith("sb-") && (n.endsWith("-auth-token") || n.endsWith("-auth-token.0"));
+  });
+
+  if (!hasAuthCookie && !isLoginPath) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", path);
     return NextResponse.redirect(url);
   }
 
-  if (user && isLoginPath) {
+  if (hasAuthCookie && isLoginPath) {
     const url = req.nextUrl.clone();
     url.pathname = "/today";
     url.search = "";
     return NextResponse.redirect(url);
   }
 
-  return res;
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    // Excluye assets de Next, imágenes y la API estática
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
