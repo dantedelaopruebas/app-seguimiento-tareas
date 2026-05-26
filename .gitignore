@@ -8,3 +8,5 @@ data/
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+# Contexto privado del proyecto (credenciales, IDs internos)
+CLAUDE.md
