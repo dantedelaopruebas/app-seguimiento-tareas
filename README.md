@@ -1,136 +1,97 @@
-# App de Seguimiento de Tareas Personales
+# App de Seguimiento de Tareas
 
-Aplicación web para llevar el control de tus tareas del día a día, con una
-interfaz oscura, limpia y rápida. Pensada para uso personal.
+App web para llevar el control de tus tareas. Esta versión es **100 % local**:
+no requiere cuentas en internet, ni servicios externos. Tu base de datos es un
+archivo en tu propia computadora.
 
----
-
-## ¿Qué hace esta app?
-
-Te permite **anotar, organizar y dar seguimiento a tus tareas**. Puedes
-agruparlas por proyectos, ponerles prioridad y fecha límite, marcarlas como
-completadas y ver tu progreso con estadísticas.
-
-Toda la información se guarda en una base de datos en la nube (**Supabase**),
-así que tus tareas están respaldadas automáticamente.
+Pensada para que un alumno principiante la corra en 2 comandos.
 
 ---
 
-## Vistas disponibles
+## Cómo arrancarla
 
-La barra lateral izquierda te deja moverte entre estas vistas:
+Necesitas tener **Node.js 18 o superior** instalado (descárgalo en
+https://nodejs.org si no lo tienes).
 
-| Vista | Para qué sirve |
+Dentro de la carpeta del proyecto:
+
+```bash
+npm install
+npm run dev
+```
+
+Abre **http://localhost:3000** y listo.
+
+La primera vez se crea automáticamente una base de datos en `data/tareas.db`
+con algunas tareas de ejemplo para que veas cómo se ve. Si quieres empezar
+en blanco, borra ese archivo y reinicia.
+
+---
+
+## Cómo se usa
+
+### Vistas (barra lateral)
+
+| Vista | Para qué |
 |---|---|
-| **Inbox** | Tareas sueltas que aún no asignaste a un proyecto. |
-| **Hoy** | Lo que tienes pendiente para el día de hoy. |
-| **Próximos 7 días** | Lo que viene en la semana. |
-| **Vencidas** | Tareas con fecha pasada que no completaste. |
-| **Completadas** | Historial de lo que ya terminaste (últimos 30 días). |
-| **Tablero** | Vista estilo Kanban: arrastra tarjetas entre "Por hacer", "En progreso" y "Hecho". |
-| **Calendario** | Tus tareas distribuidas en un calendario mensual. |
-| **Dashboard** | Resumen con números, gráfico de productividad y racha de días. |
+| **Hoy** | Lo pendiente para hoy. |
+| **Todas** | Todas tus tareas pendientes, con filtros por fecha. |
+| **Calendario** | Tus tareas en un calendario mensual. |
+| **Tablero** | Vista Kanban: arrastra entre "Por hacer", "En progreso" y "Hecho". |
+| **Historial** | Tareas que ya completaste, con filtros. |
 
----
+### Crear tareas rápido
 
-## Cómo crear tareas rápido
-
-En la barra de "Añadir tarea" puedes escribir de forma natural y la app
-entiende lo que pones. Por ejemplo:
+En la barra "¿Qué necesitas hacer?" puedes escribir natural:
 
 ```
 Pagar la luz mañana 6pm !alta #casa @hogar
 ```
 
-La app reconoce automáticamente:
-
 | Si escribes... | Significa... |
 |---|---|
-| `mañana`, `hoy`, `lunes`, `25/12` | La fecha límite de la tarea. |
-| `6pm`, `14:30` | La hora. |
-| `!alta`, `!urgente`, `!media`, `!baja` | La prioridad. |
-| `#etiqueta` | Una etiqueta para clasificar. |
-| `@proyecto` | El proyecto al que pertenece. |
+| `mañana`, `hoy`, `lunes`, `25/12` | Fecha límite |
+| `6pm`, `14:30` | Hora |
+| `!alta`, `!urgente`, `!media`, `!baja` | Prioridad |
+| `#etiqueta` | Una etiqueta |
+| `@proyecto` | Asignar a un proyecto |
 
-El resto del texto se queda como el título de la tarea.
+### Editar una tarea
 
----
+Haz clic en cualquier tarea para abrir el panel de edición. Ahí cambias
+fecha, prioridad, proyecto, notas o la eliminas.
 
-## Atajos de teclado
+### Atajos
 
-| Atajo | Acción |
+| Tecla | Acción |
 |---|---|
-| `⌘ K` (o `Ctrl K`) | Abre el buscador de comandos: crear tareas y saltar entre vistas. |
-| `c` | Pone el cursor en la barra para añadir una tarea nueva. |
+| `⌘ K` (Mac) / `Ctrl K` (Win) | Buscador de comandos (cambiar vista, buscar tareas) |
+| `c` | Cursor en la barra para añadir tarea |
 
 ---
 
-## Cómo arrancar la app en tu computadora
-
-1. Asegúrate de tener instalado **Node.js** (versión 18 o superior).
-2. Abre una terminal dentro de la carpeta del proyecto.
-3. Instala las dependencias (solo la primera vez):
-
-   ```bash
-   npm install
-   ```
-
-4. Arranca la aplicación:
-
-   ```bash
-   npm run dev
-   ```
-
-5. Abre tu navegador en **http://localhost:3000**
-
-> Para que funcione, debe existir un archivo llamado `.env` en la carpeta del
-> proyecto con la conexión a la base de datos. Ese archivo es **privado** y no
-> se sube a GitHub.
-
----
-
-## Comandos útiles
+## Comandos
 
 | Comando | Qué hace |
 |---|---|
-| `npm run dev` | Arranca la app en modo desarrollo (uso normal). |
-| `npm run build` | Prepara una versión optimizada para producción. |
-| `npm run start` | Arranca la versión de producción. |
-| `npm run db:studio` | Abre un panel visual para ver la base de datos. |
+| `npm run dev` | Arranca la app (modo desarrollo) |
+| `npm run build` | Compila la versión optimizada |
+| `npm run start` | Arranca la versión compilada |
+| `npm run db:studio` | Abre un panel visual para ver tu base de datos |
 
 ---
 
-## Cómo está organizado el proyecto
+## Notas
 
-```
-app/          Las páginas y vistas de la aplicación
-components/   Piezas reutilizables de la interfaz (barra lateral, tareas, etc.)
-lib/
-  db/         Conexión y estructura de la base de datos
-  actions/    Lógica para crear, editar y consultar tareas
-  parser/     El "traductor" que entiende el texto natural al crear tareas
-```
+- La base de datos vive en `data/tareas.db` (archivo SQLite). Es solo tuya,
+  no se sube a ningún servidor.
+- Para hacer respaldo, copia ese archivo. Para empezar de cero, bórralo.
+- La carpeta `data/` está en `.gitignore` — si subes el código no se sube tu
+  base de datos.
 
 ---
 
-## Tecnologías que usa
+## Tecnologías
 
-- **Next.js 15** y **React** — el motor de la aplicación.
-- **TypeScript** — para escribir código más seguro.
-- **Tailwind CSS** — para el diseño visual (estilo oscuro tipo Linear).
-- **Supabase (PostgreSQL)** — la base de datos en la nube donde se guardan las tareas.
-- **Drizzle ORM** — la herramienta que conecta la app con la base de datos.
-
----
-
-## Notas importantes
-
-- Como la base de datos está en la nube, **la app necesita conexión a internet**
-  para funcionar.
-- El archivo `.env` contiene datos sensibles (la contraseña de la base de datos).
-  Nunca debe compartirse ni subirse a internet.
-- Tus tareas quedan respaldadas automáticamente en Supabase.
-
----
-
-Proyecto personal de seguimiento de tareas. Desarrollado con la asistencia de Claude.
+Next.js 15, React, TypeScript, Tailwind CSS, SQLite (better-sqlite3),
+Drizzle ORM.

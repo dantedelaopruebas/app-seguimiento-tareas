@@ -9,17 +9,10 @@ import {
 import { cn } from "@/lib/utils";
 import { useState, useTransition } from "react";
 import { createProject } from "@/lib/actions/projects";
-import { LogoutButton } from "@/components/auth/logout-button";
 
 type ProjectLite = { id: string; name: string; color: string; count: number };
 
-export function Sidebar({
-  projects,
-  userEmail,
-}: {
-  projects: ProjectLite[];
-  userEmail?: string | null;
-}) {
+export function Sidebar({ projects }: { projects: ProjectLite[] }) {
   const pathname = usePathname();
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
@@ -101,20 +94,12 @@ export function Sidebar({
         })}
       </nav>
 
-      <div className="px-3 py-2 border-t border-border-subtle space-y-1">
-        <div className="flex items-center justify-between text-[11px] text-fg-subtle">
-          <span className="flex items-center gap-1.5">
-            <span className="dot" style={{ background: "#3ecf8e" }} />
-            Supabase · Nube
-          </span>
-          <span className="kbd">⌘K</span>
-        </div>
-        {userEmail && (
-          <div className="flex items-center justify-between text-[11px] text-fg-subtle">
-            <span className="truncate">{userEmail}</span>
-            <LogoutButton email={userEmail} />
-          </div>
-        )}
+      <div className="px-3 py-3 border-t border-border-subtle flex items-center justify-between text-[11px] text-fg-subtle">
+        <span className="flex items-center gap-1.5">
+          <span className="dot" style={{ background: "#3b82f6" }} />
+          Local · SQLite
+        </span>
+        <span className="kbd">⌘K</span>
       </div>
     </aside>
   );

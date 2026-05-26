@@ -6,10 +6,8 @@ import { startOfDay, subDays, format } from "date-fns";
 import { es } from "date-fns/locale";
 
 export async function getDashboardStats() {
-  const [allTasks, allProjects] = await Promise.all([
-    db.select().from(tasks),
-    db.select().from(projects),
-  ]);
+  const allTasks = db.select().from(tasks).all();
+  const allProjects = db.select().from(projects).all();
 
   const now = new Date();
   const todayStart = startOfDay(now);
@@ -19,10 +17,7 @@ export async function getDashboardStats() {
   let overdue = 0;
   let todayDue = 0;
   for (const t of allTasks) {
-    if (t.status === "done") {
-      done++;
-      continue;
-    }
+    if (t.status === "done") { done++; continue; }
     if (t.dueDate) {
       const d = new Date(t.dueDate);
       if (d < todayStart) overdue++;
@@ -30,7 +25,6 @@ export async function getDashboardStats() {
     }
   }
 
-  // Completadas por día (calculado en JS para evitar problemas de zona horaria)
   const byDay = new Map<string, number>();
   const completionDays = new Set<string>();
   for (const t of allTasks) {
@@ -46,7 +40,6 @@ export async function getDashboardStats() {
     return { day: format(d, "d MMM", { locale: es }), key, count: byDay.get(key) ?? 0 };
   });
 
-  // Racha: días consecutivos con al menos una tarea completada
   let streak = 0;
   let cursor = todayStart;
   if (!completionDays.has(format(cursor, "yyyy-MM-dd"))) cursor = subDays(cursor, 1);
@@ -75,10 +68,8 @@ export async function getDashboardStats() {
 }
 
 export async function exportAllAsJson() {
-  const [allTasks, allProjects] = await Promise.all([
-    db.select().from(tasks),
-    db.select().from(projects),
-  ]);
+  const allTasks = db.select().from(tasks).all();
+  const allProjects = db.select().from(projects).all();
   return JSON.stringify(
     { exportedAt: new Date().toISOString(), tasks: allTasks, projects: allProjects },
     null,

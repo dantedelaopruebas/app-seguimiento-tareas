@@ -8,34 +8,33 @@ import { revalidatePath } from "next/cache";
 import { parseQuickAdd } from "@/lib/parser/quick-add";
 import { endOfDay, startOfDay, addDays } from "date-fns";
 
-async function ensureProject(name: string) {
-  const existing = (
-    await db
-      .select()
-      .from(projects)
-      .where(sql`lower(${projects.name}) = ${name.toLowerCase()}`)
-      .limit(1)
-  )[0];
+// ── helpers internos ────────────────────────────────────────────────
+
+function ensureProject(name: string) {
+  const existing = db
+    .select()
+    .from(projects)
+    .where(sql`lower(${projects.name}) = ${name.toLowerCase()}`)
+    .get();
   if (existing) return existing;
   const id = uid("prj");
-  await db.insert(projects).values({ id, name }).returning();
+  db.insert(projects).values({ id, name }).run();
   return { id, name } as typeof projects.$inferSelect;
 }
 
-async function ensureTags(names: string[]) {
+function ensureTags(names: string[]) {
   const ids: string[] = [];
   for (const n of names) {
-    const existing = (await db.select().from(tags).where(eq(tags.name, n)).limit(1))[0];
-    if (existing) {
-      ids.push(existing.id);
-      continue;
-    }
+    const existing = db.select().from(tags).where(eq(tags.name, n)).get();
+    if (existing) { ids.push(existing.id); continue; }
     const id = uid("tag");
-    await db.insert(tags).values({ id, name: n });
+    db.insert(tags).values({ id, name: n }).run();
     ids.push(id);
   }
   return ids;
 }
+
+// ── mutaciones ──────────────────────────────────────────────────────
 
 export async function createTaskFromInput(input: string, defaultProjectId?: string | null) {
   const parsed = parseQuickAdd(input);
@@ -43,54 +42,53 @@ export async function createTaskFromInput(input: string, defaultProjectId?: stri
 
   let projectId: string | null = defaultProjectId ?? null;
   if (parsed.projectName) {
-    const p = await ensureProject(parsed.projectName);
+    const p = ensureProject(parsed.projectName);
     projectId = p.id;
   }
 
   const id = uid("tsk");
-  const [inserted] = await db
-    .insert(tasks)
-    .values({
-      id,
-      title: parsed.title,
-      priority: parsed.priority,
-      dueDate: parsed.dueDate ?? null,
-      projectId,
-    })
-    .returning();
+  db.insert(tasks).values({
+    id,
+    title: parsed.title,
+    priority: parsed.priority,
+    dueDate: parsed.dueDate ?? null,
+    projectId,
+  }).run();
+
+  const inserted = db.select().from(tasks).where(eq(tasks.id, id)).get();
 
   if (parsed.tags.length) {
-    const tagIds = await ensureTags(parsed.tags);
+    const tagIds = ensureTags(parsed.tags);
     for (const tid of tagIds) {
-      await db.insert(taskTags).values({ taskId: id, tagId: tid });
+      db.insert(taskTags).values({ taskId: id, tagId: tid }).run();
     }
   }
 
-  await db.insert(activityLog).values({ id: uid("act"), taskId: id, action: "created" });
+  db.insert(activityLog).values({ id: uid("act"), taskId: id, action: "created" }).run();
   revalidatePath("/", "layout");
-  return { ok: true as const, id, task: inserted };
+  return { ok: true as const, id, task: inserted! };
 }
 
 export async function toggleTask(id: string) {
-  const t = (await db.select().from(tasks).where(eq(tasks.id, id)).limit(1))[0];
+  const t = db.select().from(tasks).where(eq(tasks.id, id)).get();
   if (!t) return;
   const done = t.status === "done";
-  await db
-    .update(tasks)
+  db.update(tasks)
     .set({
       status: done ? "todo" : "done",
       completedAt: done ? null : new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(tasks.id, id));
-  await db
-    .insert(activityLog)
-    .values({ id: uid("act"), taskId: id, action: done ? "reopened" : "completed" });
+    .where(eq(tasks.id, id))
+    .run();
+  db.insert(activityLog)
+    .values({ id: uid("act"), taskId: id, action: done ? "reopened" : "completed" })
+    .run();
   revalidatePath("/", "layout");
 }
 
 export async function deleteTask(id: string) {
-  await db.delete(tasks).where(eq(tasks.id, id));
+  db.delete(tasks).where(eq(tasks.id, id)).run();
   revalidatePath("/", "layout");
 }
 
@@ -105,7 +103,7 @@ export async function updateTask(
     projectId: string | null;
   }>
 ) {
-  await db.update(tasks).set({ ...patch, updatedAt: new Date() }).where(eq(tasks.id, id));
+  db.update(tasks).set({ ...patch, updatedAt: new Date() }).where(eq(tasks.id, id)).run();
   revalidatePath("/", "layout");
 }
 
@@ -114,17 +112,19 @@ export async function moveTaskStatus(
   status: "todo" | "in_progress" | "done",
   position: number
 ) {
-  await db
-    .update(tasks)
+  db.update(tasks)
     .set({
       status,
       position,
       completedAt: status === "done" ? new Date() : null,
       updatedAt: new Date(),
     })
-    .where(eq(tasks.id, id));
+    .where(eq(tasks.id, id))
+    .run();
   revalidatePath("/", "layout");
 }
+
+// ── consultas ───────────────────────────────────────────────────────
 
 export interface TaskFilter {
   scope?: "inbox" | "today" | "next7" | "overdue" | "all" | "done";
@@ -145,7 +145,8 @@ export async function listCompletedToday(scopeProjectId?: string | null) {
     .select()
     .from(tasks)
     .where(and(...conditions))
-    .orderBy(desc(tasks.completedAt));
+    .orderBy(desc(tasks.completedAt))
+    .all();
 }
 
 export async function listAllCompleted(days = 30) {
@@ -154,7 +155,8 @@ export async function listAllCompleted(days = 30) {
     .select()
     .from(tasks)
     .where(and(eq(tasks.status, "done"), gte(tasks.completedAt, from)))
-    .orderBy(desc(tasks.completedAt));
+    .orderBy(desc(tasks.completedAt))
+    .all();
 }
 
 export interface CompletedFilter {
@@ -178,7 +180,8 @@ export async function listCompletedFiltered(filter: CompletedFilter) {
     .select()
     .from(tasks)
     .where(and(...conditions))
-    .orderBy(desc(tasks.completedAt));
+    .orderBy(desc(tasks.completedAt))
+    .all();
 }
 
 export async function listTasks(filter: TaskFilter = {}) {
@@ -211,7 +214,21 @@ export async function listTasks(filter: TaskFilter = {}) {
     .select()
     .from(tasks)
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(asc(tasks.status), asc(tasks.dueDate), desc(tasks.createdAt));
+    .orderBy(asc(tasks.status), asc(tasks.dueDate), desc(tasks.createdAt))
+    .all();
+}
+
+export async function listDashboardTasks() {
+  // En SQLite timestamp_ms se guarda como integer; comparamos con número.
+  const sinceMs = Date.now() - 30 * 86400000;
+  return db
+    .select()
+    .from(tasks)
+    .where(
+      sql`${tasks.status} != 'done' OR ${tasks.completedAt} >= ${sinceMs}`
+    )
+    .orderBy(desc(tasks.createdAt))
+    .all();
 }
 
 export async function searchTasks(query: string, limit = 10) {
@@ -222,32 +239,6 @@ export async function searchTasks(query: string, limit = 10) {
     .from(tasks)
     .where(sql`lower(${tasks.title}) LIKE ${`%${q}%`}`)
     .orderBy(desc(tasks.updatedAt))
-    .limit(limit);
-}
-
-/**
- * Carga única para el shell de la app: todas las tareas pendientes + las
- * completadas en los últimos 30 días (suficiente para Hoy/Todas/Tablero/
- * Calendario y la mayoría del Historial). Las consultas adicionales solo
- * se hacen al ver Historial con filtros más antiguos.
- */
-export async function listDashboardTasks() {
-  const since = new Date(Date.now() - 30 * 86400000);
-  return db
-    .select()
-    .from(tasks)
-    .where(
-      sql`${tasks.status} != 'done' OR ${tasks.completedAt} >= ${since}`
-    )
-    .orderBy(desc(tasks.createdAt));
-}
-
-export async function listAllTasksWithRelations() {
-  const [allTasks, allProjects, allTags, relations] = await Promise.all([
-    db.select().from(tasks).orderBy(asc(tasks.position), desc(tasks.createdAt)),
-    db.select().from(projects),
-    db.select().from(tags),
-    db.select().from(taskTags),
-  ]);
-  return { tasks: allTasks, projects: allProjects, tags: allTags, taskTags: relations };
+    .limit(limit)
+    .all();
 }

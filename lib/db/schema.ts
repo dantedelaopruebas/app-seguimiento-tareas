@@ -1,19 +1,21 @@
-import { pgSchema, text, integer, timestamp, primaryKey } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { sqliteTable, text, integer, primaryKey } from "drizzle-orm/sqlite-core";
 
-// Todas las tablas viven en un schema aislado "tareas" dentro del proyecto
-// Supabase APPS_CLAUDE, para no chocar con otras apps en el mismo proyecto.
-export const tareas = pgSchema("tareas");
+// Versión local: SQLite, sin schemas (SQLite no soporta schemas como Postgres).
+// Las tablas viven en la base por defecto del archivo data/tareas.db.
 
-export const projects = tareas.table("projects", {
+export const projects = sqliteTable("projects", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   color: text("color").notNull().default("#6366f1"),
   icon: text("icon").notNull().default("Folder"),
   position: integer("position").notNull().default(0),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
 });
 
-export const tasks = tareas.table("tasks", {
+export const tasks = sqliteTable("tasks", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
@@ -23,22 +25,26 @@ export const tasks = tareas.table("tasks", {
   priority: text("priority", { enum: ["none", "low", "medium", "high", "urgent"] })
     .notNull()
     .default("none"),
-  dueDate: timestamp("due_date", { withTimezone: true }),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
+  dueDate: integer("due_date", { mode: "timestamp_ms" }),
+  completedAt: integer("completed_at", { mode: "timestamp_ms" }),
   projectId: text("project_id").references(() => projects.id, { onDelete: "set null" }),
   parentTaskId: text("parent_task_id"),
   position: integer("position").notNull().default(0),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
 });
 
-export const tags = tareas.table("tags", {
+export const tags = sqliteTable("tags", {
   id: text("id").primaryKey(),
   name: text("name").notNull().unique(),
   color: text("color").notNull().default("#a3a3a3"),
 });
 
-export const taskTags = tareas.table(
+export const taskTags = sqliteTable(
   "task_tags",
   {
     taskId: text("task_id")
@@ -51,11 +57,13 @@ export const taskTags = tareas.table(
   (t) => ({ pk: primaryKey({ columns: [t.taskId, t.tagId] }) })
 );
 
-export const activityLog = tareas.table("activity_log", {
+export const activityLog = sqliteTable("activity_log", {
   id: text("id").primaryKey(),
   taskId: text("task_id"),
   action: text("action").notNull(),
-  timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
+  timestamp: integer("timestamp", { mode: "timestamp_ms" })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
 });
 
 export type Project = typeof projects.$inferSelect;
