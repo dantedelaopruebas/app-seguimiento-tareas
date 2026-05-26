@@ -1,136 +1,196 @@
-# App de Seguimiento de Tareas Personales
+# App de Seguimiento de Tareas
 
-Aplicación web para llevar el control de tus tareas del día a día, con una
-interfaz oscura, limpia y rápida. Pensada para uso personal.
+App web para llevar el control de tus tareas del día a día. Interfaz oscura
+estilo Linear/Todoist. La base de datos vive en tu propia cuenta de Supabase
+(gratis), así que tus tareas están respaldadas en la nube.
 
----
-
-## ¿Qué hace esta app?
-
-Te permite **anotar, organizar y dar seguimiento a tus tareas**. Puedes
-agruparlas por proyectos, ponerles prioridad y fecha límite, marcarlas como
-completadas y ver tu progreso con estadísticas.
-
-Toda la información se guarda en una base de datos en la nube (**Supabase**),
-así que tus tareas están respaldadas automáticamente.
+Esta guía está pensada para que **cualquier persona sin experiencia técnica**
+pueda tenerla corriendo en su computadora en ~10 minutos.
 
 ---
 
-## Vistas disponibles
+## Antes de empezar
 
-La barra lateral izquierda te deja moverte entre estas vistas:
+Necesitas tener instalado **Node.js versión 18 o superior**.
 
-| Vista | Para qué sirve |
+Verifica con:
+
+```bash
+node --version
+```
+
+Si no lo tienes, instálalo desde **https://nodejs.org** (versión "LTS").
+
+---
+
+## Paso 1 · Clona el proyecto
+
+```bash
+git clone https://github.com/dantedelaopruebas/app-seguimiento-tareas.git
+cd app-seguimiento-tareas
+npm install
+```
+
+`npm install` tarda 1-2 minutos la primera vez.
+
+---
+
+## Paso 2 · Crea tu cuenta y proyecto en Supabase
+
+Supabase es donde vivirá tu base de datos. Es **gratis** para uso personal.
+
+1. Entra a **https://supabase.com** y crea una cuenta.
+2. Una vez dentro, clic en **New project**:
+   - **Name**: el que quieras (ej. `mis-tareas`).
+   - **Database Password**: pon cualquier contraseña. **No te preocupes en
+     recordarla**, el setup va a generar una nueva más segura por ti.
+   - **Region**: la más cercana a ti.
+3. Espera ~2 minutos a que el proyecto termine de aprovisionarse.
+
+---
+
+## Paso 3 · Genera tu Personal Access Token
+
+Este token le da permiso al setup para preparar tu base de datos.
+
+1. Ve a **https://supabase.com/dashboard/account/tokens**
+2. **Generate new token** → ponle nombre (ej. `setup-tareas`) → **Generate**
+3. **Copia el token** (empieza con `sbp_...`) — solo se muestra una vez.
+
+---
+
+## Paso 4 · Configura el proyecto automáticamente
+
+Tienes **dos caminos**, elige el que prefieras:
+
+### Camino A · Con Claude Code (más fácil, conversacional)
+
+Si tienes Claude Code instalado, ábrelo dentro de la carpeta del proyecto y
+escribe en el chat:
+
+> **"configura mi proyecto"**
+
+Claude detectará automáticamente la skill `setup-tareas` que vive en el repo,
+te pedirá tu token y tus datos de login, y se encargará del resto. Tú solo
+contestas sus preguntas en lenguaje natural.
+
+### Camino B · Manual con un solo comando
+
+Desde la terminal, dentro de la carpeta del proyecto:
+
+```bash
+npm run setup
+```
+
+El script te pide en orden:
+
+1. Tu **Personal Access Token** de Supabase (pégalo y dale Enter)
+2. Cuál proyecto Supabase usar (si solo tienes uno, lo detecta solo)
+3. Email para entrar a la app (puede ser ficticio, ej. `tu@tareas.app`)
+4. Contraseña (la que tú quieras, o déjalo vacío y te genera una)
+
+Mientras tanto el script, sin que hagas nada más:
+
+- Crea todas las tablas necesarias en tu base de datos
+- Crea tu usuario para entrar a la app
+- Deshabilita el registro público (solo tú podrás entrar)
+- Genera una contraseña fuerte para la base
+- Crea el archivo `.env` con todas las credenciales listas
+
+Al final te muestra **tus credenciales** (email + contraseña) —
+**guárdalas en un lugar seguro**.
+
+---
+
+## Paso 5 · Arranca la app
+
+```bash
+npm run dev
+```
+
+Abre **http://localhost:3000** y entra con el email y contraseña del paso
+anterior.
+
+---
+
+## Cómo usar la app
+
+### Vistas (barra lateral)
+
+| Vista | Para qué |
 |---|---|
-| **Inbox** | Tareas sueltas que aún no asignaste a un proyecto. |
-| **Hoy** | Lo que tienes pendiente para el día de hoy. |
-| **Próximos 7 días** | Lo que viene en la semana. |
-| **Vencidas** | Tareas con fecha pasada que no completaste. |
-| **Completadas** | Historial de lo que ya terminaste (últimos 30 días). |
-| **Tablero** | Vista estilo Kanban: arrastra tarjetas entre "Por hacer", "En progreso" y "Hecho". |
-| **Calendario** | Tus tareas distribuidas en un calendario mensual. |
-| **Dashboard** | Resumen con números, gráfico de productividad y racha de días. |
+| **Hoy** | Tareas pendientes para hoy. |
+| **Todas** | Todas las pendientes, con filtros por fecha. |
+| **Calendario** | Vista mensual de tus tareas. |
+| **Tablero** | Vista Kanban: arrastra entre "Por hacer", "En progreso" y "Hecho". |
+| **Historial** | Tareas completadas, con filtros por período. |
 
----
+### Crear tareas rápido
 
-## Cómo crear tareas rápido
-
-En la barra de "Añadir tarea" puedes escribir de forma natural y la app
-entiende lo que pones. Por ejemplo:
+En la barra "¿Qué necesitas hacer?" escribe en lenguaje natural:
 
 ```
 Pagar la luz mañana 6pm !alta #casa @hogar
 ```
 
-La app reconoce automáticamente:
-
 | Si escribes... | Significa... |
 |---|---|
-| `mañana`, `hoy`, `lunes`, `25/12` | La fecha límite de la tarea. |
-| `6pm`, `14:30` | La hora. |
-| `!alta`, `!urgente`, `!media`, `!baja` | La prioridad. |
-| `#etiqueta` | Una etiqueta para clasificar. |
-| `@proyecto` | El proyecto al que pertenece. |
+| `mañana`, `hoy`, `lunes`, `25/12` | Fecha límite |
+| `6pm`, `14:30` | Hora |
+| `!alta`, `!urgente`, `!media`, `!baja` | Prioridad |
+| `#etiqueta` | Una etiqueta |
+| `@proyecto` | Asignar a un proyecto |
 
-El resto del texto se queda como el título de la tarea.
+### Editar una tarea
 
----
+Haz clic en cualquier tarea para abrir el panel de edición.
 
-## Atajos de teclado
+### Atajos
 
-| Atajo | Acción |
+| Tecla | Acción |
 |---|---|
-| `⌘ K` (o `Ctrl K`) | Abre el buscador de comandos: crear tareas y saltar entre vistas. |
-| `c` | Pone el cursor en la barra para añadir una tarea nueva. |
+| `⌘ K` / `Ctrl K` | Buscador de comandos |
+| `c` | Cursor en la barra para añadir tarea |
 
 ---
 
-## Cómo arrancar la app en tu computadora
+## (Opcional) Publica tu app en internet con Vercel
 
-1. Asegúrate de tener instalado **Node.js** (versión 18 o superior).
-2. Abre una terminal dentro de la carpeta del proyecto.
-3. Instala las dependencias (solo la primera vez):
+Si quieres acceder a tu app desde cualquier dispositivo:
 
-   ```bash
-   npm install
-   ```
-
-4. Arranca la aplicación:
-
-   ```bash
-   npm run dev
-   ```
-
-5. Abre tu navegador en **http://localhost:3000**
-
-> Para que funcione, debe existir un archivo llamado `.env` en la carpeta del
-> proyecto con la conexión a la base de datos. Ese archivo es **privado** y no
-> se sube a GitHub.
+1. Crea cuenta en **https://vercel.com**
+2. Instala el CLI: `npm install -g vercel`
+3. Desde la carpeta: `vercel` → sigue las preguntas (link nuevo proyecto)
+4. Sube tus variables: ve a Settings → Environment Variables en Vercel y
+   pega las 3 variables de tu `.env`
+5. Despliega: `vercel --prod`
 
 ---
 
-## Comandos útiles
+## Solución de problemas
+
+| Problema | Solución |
+|---|---|
+| `npm install` falla | Verifica `node --version` ≥ 18 |
+| `npm run setup` dice token inválido | Genera otro en https://supabase.com/dashboard/account/tokens |
+| Proyecto en estado `COMING_UP` | Espera 1-2 min y vuelve a correrlo |
+| `/login` dice credenciales incorrectas | Usa exactamente el email y contraseña que el script mostró al final |
+| Olvidé mi contraseña | Corre `npm run setup` con un email distinto (se crea otro usuario) o reseteala desde Supabase Dashboard → Authentication → Users |
+
+---
+
+## Comandos disponibles
 
 | Comando | Qué hace |
 |---|---|
-| `npm run dev` | Arranca la app en modo desarrollo (uso normal). |
-| `npm run build` | Prepara una versión optimizada para producción. |
-| `npm run start` | Arranca la versión de producción. |
-| `npm run db:studio` | Abre un panel visual para ver la base de datos. |
+| `npm run setup` | Configura tu Supabase desde cero (lo corres una vez al inicio) |
+| `npm run dev` | Arranca la app en local |
+| `npm run build` | Compila la versión optimizada |
+| `npm run start` | Sirve la versión compilada |
+| `npm run db:studio` | Panel visual para inspeccionar tu base de datos |
 
 ---
 
-## Cómo está organizado el proyecto
+## Tecnologías
 
-```
-app/          Las páginas y vistas de la aplicación
-components/   Piezas reutilizables de la interfaz (barra lateral, tareas, etc.)
-lib/
-  db/         Conexión y estructura de la base de datos
-  actions/    Lógica para crear, editar y consultar tareas
-  parser/     El "traductor" que entiende el texto natural al crear tareas
-```
-
----
-
-## Tecnologías que usa
-
-- **Next.js 15** y **React** — el motor de la aplicación.
-- **TypeScript** — para escribir código más seguro.
-- **Tailwind CSS** — para el diseño visual (estilo oscuro tipo Linear).
-- **Supabase (PostgreSQL)** — la base de datos en la nube donde se guardan las tareas.
-- **Drizzle ORM** — la herramienta que conecta la app con la base de datos.
-
----
-
-## Notas importantes
-
-- Como la base de datos está en la nube, **la app necesita conexión a internet**
-  para funcionar.
-- El archivo `.env` contiene datos sensibles (la contraseña de la base de datos).
-  Nunca debe compartirse ni subirse a internet.
-- Tus tareas quedan respaldadas automáticamente en Supabase.
-
----
-
-Proyecto personal de seguimiento de tareas. Desarrollado con la asistencia de Claude.
+Next.js 15, React, TypeScript, Tailwind CSS, Supabase (Postgres) y Drizzle ORM.
